@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,9 +21,14 @@
             --input-bg: rgba(255, 255, 255, 0.03);
             --input-focus: rgba(139, 92, 246, 0.15);
         }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
@@ -32,7 +38,7 @@
             align-items: center;
             justify-content: center;
             background-image: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15), transparent 40%),
-                              radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.12), transparent 40%);
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.12), transparent 40%);
             padding: 20px;
         }
 
@@ -54,13 +60,34 @@
             padding: 30px;
         }
 
-        .header { text-align: center; margin-bottom: 30px; transition: all 0.3s; }
-        .header.compact { margin-bottom: 15px; }
-        .header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(45deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .header p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
 
-        .upload-group { margin-bottom: 24px; }
-        
+        .header.compact {
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(45deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .upload-group {
+            margin-bottom: 24px;
+        }
+
         .file-input-wrapper {
             position: relative;
             border: 2px dashed var(--border-color);
@@ -71,10 +98,29 @@
             cursor: pointer;
             background: rgba(255, 255, 255, 0.01);
         }
-        
-        .file-input-wrapper:hover { border-color: var(--primary-color); background: rgba(139, 92, 246, 0.04); box-shadow: 0 0 20px rgba(139, 92, 246, 0.1); }
-        .file-input-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        .file-name { margin-top: 12px; color: var(--text-muted); font-size: 14px; font-weight: 500; }
+
+        .file-input-wrapper:hover {
+            border-color: var(--primary-color);
+            background: rgba(139, 92, 246, 0.04);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-name {
+            margin-top: 12px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
 
         .btn {
             width: 100%;
@@ -93,10 +139,22 @@
             justify-content: center;
             gap: 8px;
         }
-        
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); }
-        .btn:active { transform: translateY(0); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         .btn-secondary {
             background: rgba(255, 255, 255, 0.05);
@@ -104,7 +162,12 @@
             border: 1px solid var(--border-color);
             box-shadow: none;
         }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); box-shadow: none; transform: translateY(-2px); }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            transform: translateY(-2px);
+        }
 
         .btn-add {
             padding: 10px 16px;
@@ -114,13 +177,45 @@
             background: var(--primary-color);
             box-shadow: none;
         }
-        .btn-add:hover { background: #7c3aed; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
 
-        .status-container { margin-top: 25px; text-align: center; display: none; }
-        .status-text { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; }
+        .btn-add:hover {
+            background: #7c3aed;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
 
-        .download-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid #ec4899; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
-        .download-btn:hover { background: #ec4899; color: white; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236, 72, 153, 0.3); }
+        .status-container {
+            margin-top: 25px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: rgba(236, 72, 153, 0.1);
+            color: #ec4899;
+            border: 1px solid #ec4899;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #ec4899;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.3);
+        }
 
         /* Glossary Editor CSS */
         .editor-section {
@@ -189,9 +284,19 @@
             letter-spacing: 0.05em;
         }
 
-        .hdr-en { flex: 1; }
-        .hdr-vi { flex: 1; margin-left: 15px; }
-        .hdr-act { width: 40px; text-align: center; }
+        .hdr-en {
+            flex: 1;
+        }
+
+        .hdr-vi {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .hdr-act {
+            width: 40px;
+            text-align: center;
+        }
 
         .editor-scroll {
             max-height: 380px;
@@ -203,10 +308,23 @@
         }
 
         /* Webkit Scrollbar Styling */
-        .editor-scroll::-webkit-scrollbar { width: 6px; }
-        .editor-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.01); border-radius: 3px; }
-        .editor-scroll::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.25); border-radius: 3px; }
-        .editor-scroll::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.45); }
+        .editor-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .editor-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 3px;
+        }
+
+        .editor-scroll::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.25);
+            border-radius: 3px;
+        }
+
+        .editor-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.45);
+        }
 
         .term-row {
             display: flex;
@@ -223,9 +341,15 @@
             background: rgba(139, 92, 246, 0.02);
         }
 
-        .col-en { flex: 1; }
-        .col-vi { flex: 1; margin-left: 15px; }
-        
+        .col-en {
+            flex: 1;
+        }
+
+        .col-vi {
+            flex: 1;
+            margin-left: 15px;
+        }
+
         .input-field {
             width: 100%;
             background: var(--input-bg);
@@ -289,23 +413,35 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body>
 
     <div class="container" id="main-container">
         <div class="header" id="main-header">
             <h1>Auto Glossary Extractor</h1>
-            <p>Thuần Lập Trình • 4-Layer Heuristics • Case-Sensitive Expansion</p>
+
         </div>
 
         <form id="upload-form">
             <div class="upload-group">
                 <div class="file-input-wrapper">
-                    <svg width="32" height="32" fill="none" stroke="var(--primary-color)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <svg width="32" height="32" fill="none" stroke="var(--primary-color)" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
                     <div class="file-name" id="docx-name">Upload .DOCX or .PDF Document</div>
                     <input type="file" id="docx-file" accept=".docx,.pdf" required>
                 </div>
@@ -320,25 +456,29 @@
                 <h2>Bản xem trước & Dịch thuật ngữ</h2>
                 <span class="badge" id="term-count">0 từ</span>
             </div>
-            
+
             <div class="editor-controls">
                 <input type="text" id="search-input" class="search-field" placeholder="Tìm kiếm thuật ngữ tiếng Anh...">
                 <button type="button" class="btn btn-add" id="add-term-btn">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                     Thêm từ mới
                 </button>
             </div>
-            
+
             <div class="editor-table-header">
                 <div class="hdr-en">Source</div>
                 <div class="hdr-vi">Target</div>
                 <div class="hdr-act"></div>
             </div>
-            
+
             <div class="editor-scroll" id="terms-list">
                 <!-- Dynamic Rows -->
             </div>
-            
+
             <div class="editor-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-btn">Hủy & Chọn tệp khác</button>
                 <button type="button" class="btn" id="format-btn">Định dạng & Xuất Excel</button>
@@ -348,19 +488,26 @@
         <!-- Progress and Success States -->
         <div class="status-container" id="status-container">
             <div class="status-text" id="status-text">Uploading...</div>
-            
+
             <div id="download-section" style="display: none; animation: fadeIn 0.4s ease-out; text-align: center;">
                 <div class="success-icon">
-                    <svg width="64" height="64" fill="none" stroke="var(--accent-color)" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg width="64" height="64" fill="none" stroke="var(--accent-color)" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
                 <h3 style="color: #ec4899; margin: 15px 0 10px 0; font-size: 20px;">Hoàn thành định dạng!</h3>
-                <p style="color: var(--text-muted); margin-bottom: 25px;">Tệp Excel glossary đã sẵn sàng để tải xuống.</p>
+                <p style="color: var(--text-muted); margin-bottom: 25px;">Tệp Excel glossary đã sẵn sàng để tải xuống.
+                </p>
                 <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 12px 24px;" id="restart-btn">Tải tệp mới</button>
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 12px 24px;"
+                        id="restart-btn">Tải tệp mới</button>
                     <a href="#" class="download-btn" id="download-link">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                        </svg>
                         Tải File Excel (.xlsx)
                     </a>
                 </div>
@@ -372,7 +519,7 @@
         let originalFilename = '';
         let glossaryTerms = []; // Structure: [{ english: '...', vietnamese: '...' }]
 
-        document.getElementById('docx-file').addEventListener('change', function(e) {
+        document.getElementById('docx-file').addEventListener('change', function (e) {
             const file = e.target.files[0];
             document.getElementById('docx-name').textContent = file ? file.name : "Upload .DOCX or .PDF Document";
             if (file) {
@@ -382,7 +529,7 @@
 
         document.getElementById('upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const docxFile = document.getElementById('docx-file').files[0];
             if (!docxFile) return;
 
@@ -402,7 +549,7 @@
                 } catch (jsonErr) {
                     throw new Error(`Máy chủ trả về mã trạng thái ${response.status}`);
                 }
-                
+
                 if (!response.ok || data.error) {
                     alert(data.error || `Lỗi tải lên (Mã lỗi: ${response.status})`);
                     document.getElementById('extract-btn').disabled = false;
@@ -412,7 +559,7 @@
 
                 // Ẩn trạng thái phân tích
                 document.getElementById('status-container').style.display = 'none';
-                
+
                 // Lưu và hiển thị giao diện xem trước chỉnh sửa trực tiếp (stateless)
                 glossaryTerms = data.terms || [];
                 enterEditorMode();
@@ -517,7 +664,7 @@
         function filterRows(keyword) {
             const query = keyword.toLowerCase().trim();
             const rows = document.querySelectorAll('#terms-list .term-row');
-            
+
             rows.forEach(row => {
                 const index = parseInt(row.getAttribute('data-index'));
                 const term = glossaryTerms[index];
@@ -553,7 +700,7 @@
 
             const formatBtn = document.getElementById('format-btn');
             const cancelBtn = document.getElementById('cancel-btn');
-            
+
             formatBtn.disabled = true;
             cancelBtn.disabled = true;
 
@@ -569,18 +716,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ terms: glossaryTerms, filename: originalFilename })
                 });
-                
+
                 if (!response.ok) {
                     let errData;
                     try {
                         errData = await response.json();
-                    } catch (e) {}
+                    } catch (e) { }
                     throw new Error(errData?.error || `Mã lỗi ${response.status}`);
                 }
-                
+
                 const blob = await response.blob();
                 const downloadUrl = window.URL.createObjectURL(blob);
-                
+
                 // Tên file xuất ra
                 const baseName = originalFilename.substring(0, originalFilename.lastIndexOf('.')) || originalFilename;
                 const outFilename = `Glossary_Template_${baseName}.xlsx`;
@@ -590,11 +737,11 @@
                 document.getElementById('status-container').style.display = 'block';
                 document.getElementById('status-text').style.display = 'none';
                 document.getElementById('download-section').style.display = 'block';
-                
+
                 const downloadLink = document.getElementById('download-link');
                 downloadLink.href = downloadUrl;
                 downloadLink.download = outFilename;
-                
+
                 // Kích hoạt tự động download luôn cho người dùng tiện lợi
                 downloadLink.click();
             } catch (err) {
@@ -627,4 +774,5 @@
         });
     </script>
 </body>
+
 </html>
