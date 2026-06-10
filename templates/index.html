@@ -983,6 +983,93 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ── RESPONSIVE MEDIA QUERIES ── */
+        @media (max-width: 1024px) {
+            .container.expanded {
+                max-width: 100%;
+                padding: 20px;
+            }
+            .editor-layout {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .doc-viewer-section {
+                max-height: 380px;
+            }
+            .term-editor-column {
+                max-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .term-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 12px;
+            }
+            .col-en {
+                flex: none;
+                width: 100%;
+            }
+            .col-vi {
+                flex: none;
+                width: 100%;
+                margin-left: 0;
+            }
+            .col-actions {
+                width: 100%;
+                justify-content: flex-end;
+                gap: 8px;
+                border-top: 1px solid var(--border-color);
+                padding-top: 8px;
+                margin-top: 2px;
+            }
+            .editor-table-header {
+                display: none;
+            }
+            .container {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                flex-direction: column;
+                gap: 8px;
+                height: auto;
+                padding: 10px 0;
+                margin-bottom: 20px;
+            }
+            .nav-brand {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .nav-logo-divider {
+                display: none;
+            }
+            .welcome-header h1 {
+                font-size: 26px;
+            }
+            .welcome-header p {
+                font-size: 13px;
+            }
+            .file-input-wrapper {
+                padding: 30px 15px;
+            }
+            .container {
+                padding: 16px;
+                border-radius: 4px;
+            }
+            .success-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 
