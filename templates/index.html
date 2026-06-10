@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Glossary Extractor (Pure Code)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: rgba(17, 24, 39, 0.7);
+            --primary-color: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.3);
+            --secondary-color: #ec4899;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --danger-color: #ef4444;
+            --accent-color: #10b981;
+            --input-bg: rgba(255, 255, 255, 0.03);
+            --input-focus: rgba(139, 92, 246, 0.15);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15), transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.12), transparent 40%);
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--surface-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .container.expanded {
+            max-width: 950px;
+            padding: 30px;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; transition: all 0.3s; }
+        .header.compact { margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(45deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+
+        .upload-group { margin-bottom: 24px; }
+        
+        .file-input-wrapper {
+            position: relative;
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.01);
+        }
+        
+        .file-input-wrapper:hover { border-color: var(--primary-color); background: rgba(139, 92, 246, 0.04); box-shadow: 0 0 20px rgba(139, 92, 246, 0.1); }
+        .file-input-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        .file-name { margin-top: 12px; color: var(--text-muted); font-size: 14px; font-weight: 500; }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); box-shadow: none; transform: translateY(-2px); }
+
+        .btn-add {
+            padding: 10px 16px;
+            font-size: 14px;
+            border-radius: 8px;
+            width: auto;
+            background: var(--primary-color);
+            box-shadow: none;
+        }
+        .btn-add:hover { background: #7c3aed; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+
+        .status-container { margin-top: 25px; text-align: center; display: none; }
+        .status-text { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; }
+
+        .download-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid #ec4899; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
+        .download-btn:hover { background: #ec4899; color: white; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236, 72, 153, 0.3); }
+
+        /* Glossary Editor CSS */
+        .editor-section {
+            animation: fadeIn 0.4s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .editor-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c084fc;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-field {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .editor-table-header {
+            display: flex;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .hdr-en { flex: 1; }
+        .hdr-vi { flex: 1; margin-left: 15px; }
+        .hdr-act { width: 40px; text-align: center; }
+
+        .editor-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 4px;
+        }
+
+        /* Webkit Scrollbar Styling */
+        .editor-scroll::-webkit-scrollbar { width: 6px; }
+        .editor-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.01); border-radius: 3px; }
+        .editor-scroll::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.25); border-radius: 3px; }
+        .editor-scroll::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.45); }
+
+        .term-row {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 12px;
+            transition: all 0.2s;
+        }
+
+        .term-row:hover {
+            border-color: rgba(139, 92, 246, 0.2);
+            background: rgba(139, 92, 246, 0.02);
+        }
+
+        .col-en { flex: 1; }
+        .col-vi { flex: 1; margin-left: 15px; }
+        
+        .input-field {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--text-main);
+            padding: 8px 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .input-field:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-field:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .delete-row-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+
+        .delete-row-btn:hover {
+            color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.1);
+            transform: scale(1.1);
+        }
+
+        .editor-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        .editor-footer .btn {
+            width: auto;
+            padding: 12px 24px;
+        }
+
+        .success-icon {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-container">
+        <div class="header" id="main-header">
+            <h1>Auto Glossary Extractor</h1>
+            <p>Thuần Lập Trình • 4-Layer Heuristics • Case-Sensitive Expansion</p>
+        </div>
+
+        <form id="upload-form">
+            <div class="upload-group">
+                <div class="file-input-wrapper">
+                    <svg width="32" height="32" fill="none" stroke="var(--primary-color)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <div class="file-name" id="docx-name">Upload .DOCX or .PDF Document</div>
+                    <input type="file" id="docx-file" accept=".docx,.pdf" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="extract-btn">Bắt đầu Phân tích Văn bản</button>
+        </form>
+
+        <!-- Preview Editor Section (Initially Hidden) -->
+        <div class="editor-section" id="editor-section" style="display: none;">
+            <div class="editor-header">
+                <h2>Bản xem trước & Dịch thuật ngữ</h2>
+                <span class="badge" id="term-count">0 từ</span>
+            </div>
+            
+            <div class="editor-controls">
+                <input type="text" id="search-input" class="search-field" placeholder="Tìm kiếm thuật ngữ tiếng Anh...">
+                <button type="button" class="btn btn-add" id="add-term-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Thêm từ mới
+                </button>
+            </div>
+            
+            <div class="editor-table-header">
+                <div class="hdr-en">Source</div>
+                <div class="hdr-vi">Target</div>
+                <div class="hdr-act"></div>
+            </div>
+            
+            <div class="editor-scroll" id="terms-list">
+                <!-- Dynamic Rows -->
+            </div>
+            
+            <div class="editor-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-btn">Hủy & Chọn tệp khác</button>
+                <button type="button" class="btn" id="format-btn">Định dạng & Xuất Excel</button>
+            </div>
+        </div>
+
+        <!-- Progress and Success States -->
+        <div class="status-container" id="status-container">
+            <div class="status-text" id="status-text">Uploading...</div>
+            
+            <div id="download-section" style="display: none; animation: fadeIn 0.4s ease-out; text-align: center;">
+                <div class="success-icon">
+                    <svg width="64" height="64" fill="none" stroke="var(--accent-color)" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 style="color: #ec4899; margin: 15px 0 10px 0; font-size: 20px;">Hoàn thành định dạng!</h3>
+                <p style="color: var(--text-muted); margin-bottom: 25px;">Tệp Excel glossary đã sẵn sàng để tải xuống.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 12px 24px;" id="restart-btn">Tải tệp mới</button>
+                    <a href="#" class="download-btn" id="download-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Tải File Excel (.xlsx)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let originalFilename = '';
+        let glossaryTerms = []; // Structure: [{ english: '...', vietnamese: '...' }]
+
+        document.getElementById('docx-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            document.getElementById('docx-name').textContent = file ? file.name : "Upload .DOCX or .PDF Document";
+            if (file) {
+                originalFilename = file.name;
+            }
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const docxFile = document.getElementById('docx-file').files[0];
+            if (!docxFile) return;
+
+            const formData = new FormData();
+            formData.append('docx_file', docxFile);
+
+            document.getElementById('extract-btn').disabled = true;
+            document.getElementById('status-container').style.display = 'block';
+            document.getElementById('download-section').style.display = 'none';
+            document.getElementById('status-text').textContent = 'Đang tải tệp tin và phân tích thuật ngữ...';
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {
+                    throw new Error(`Máy chủ trả về mã trạng thái ${response.status}`);
+                }
+                
+                if (!response.ok || data.error) {
+                    alert(data.error || `Lỗi tải lên (Mã lỗi: ${response.status})`);
+                    document.getElementById('extract-btn').disabled = false;
+                    document.getElementById('status-container').style.display = 'none';
+                    return;
+                }
+
+                // Ẩn trạng thái phân tích
+                document.getElementById('status-container').style.display = 'none';
+                
+                // Lưu và hiển thị giao diện xem trước chỉnh sửa trực tiếp (stateless)
+                glossaryTerms = data.terms || [];
+                enterEditorMode();
+            } catch (err) {
+                alert("Lỗi khi tải lên tệp tin: " + err.message);
+                document.getElementById('extract-btn').disabled = false;
+                document.getElementById('status-container').style.display = 'none';
+            }
+        });
+
+        function enterEditorMode() {
+            // Thay đổi giao diện container
+            const mainContainer = document.getElementById('main-container');
+            const mainHeader = document.getElementById('main-header');
+            const uploadForm = document.getElementById('upload-form');
+            const editorSection = document.getElementById('editor-section');
+
+            mainContainer.classList.add('expanded');
+            mainHeader.classList.add('compact');
+            uploadForm.style.display = 'none';
+            editorSection.style.display = 'flex';
+
+            renderRows();
+        }
+
+        function updateTermCount() {
+            const badge = document.getElementById('term-count');
+            badge.textContent = `${glossaryTerms.length} từ khóa`;
+        }
+
+        function renderRows() {
+            const listContainer = document.getElementById('terms-list');
+            listContainer.innerHTML = '';
+            updateTermCount();
+
+            glossaryTerms.forEach((term, index) => {
+                const row = document.createElement('div');
+                row.className = 'term-row';
+                row.setAttribute('data-index', index);
+
+                // English Column
+                const colEn = document.createElement('div');
+                colEn.className = 'col-en';
+                const inputEn = document.createElement('input');
+                inputEn.type = 'text';
+                inputEn.className = 'input-field term-en';
+                inputEn.value = term.english;
+                inputEn.placeholder = 'Source';
+                inputEn.addEventListener('input', (e) => {
+                    glossaryTerms[index].english = e.target.value;
+                });
+                colEn.appendChild(inputEn);
+
+                // Vietnamese Column
+                const colVi = document.createElement('div');
+                colVi.className = 'col-vi';
+                const inputVi = document.createElement('input');
+                inputVi.type = 'text';
+                inputVi.className = 'input-field term-vi';
+                inputVi.value = term.vietnamese;
+                inputVi.placeholder = 'Nhập nghĩa tiếng Việt...';
+                inputVi.addEventListener('input', (e) => {
+                    glossaryTerms[index].vietnamese = e.target.value;
+                });
+                colVi.appendChild(inputVi);
+
+                // Action Column
+                const colAct = document.createElement('div');
+                colAct.className = 'col-actions';
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-row-btn';
+                delBtn.title = 'Xóa từ này';
+                delBtn.innerHTML = `
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                `;
+                delBtn.addEventListener('click', () => {
+                    glossaryTerms.splice(index, 1);
+                    renderRows();
+                    // Nếu đang có từ khóa search, tự động filter lại
+                    filterRows(document.getElementById('search-input').value);
+                });
+                colAct.appendChild(delBtn);
+
+                row.appendChild(colEn);
+                row.appendChild(colVi);
+                row.appendChild(colAct);
+
+                listContainer.appendChild(row);
+            });
+        }
+
+        // Search/Filter Function
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            filterRows(e.target.value);
+        });
+
+        function filterRows(keyword) {
+            const query = keyword.toLowerCase().trim();
+            const rows = document.querySelectorAll('#terms-list .term-row');
+            
+            rows.forEach(row => {
+                const index = parseInt(row.getAttribute('data-index'));
+                const term = glossaryTerms[index];
+                if (term) {
+                    const matchesEn = term.english.toLowerCase().includes(query);
+                    const matchesVi = term.vietnamese.toLowerCase().includes(query);
+                    if (matchesEn || matchesVi) {
+                        row.style.display = 'flex';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Add Term Function
+        document.getElementById('add-term-btn').addEventListener('click', () => {
+            glossaryTerms.unshift({ english: '', vietnamese: '' });
+            renderRows();
+            // Xoá search để hiển thị từ vừa thêm
+            document.getElementById('search-input').value = '';
+            // Tự động focus vào ô EN đầu tiên
+            const firstEnInput = document.querySelector('#terms-list .term-row:first-child .term-en');
+            if (firstEnInput) firstEnInput.focus();
+        });
+
+        // Format and Save Function
+        document.getElementById('format-btn').addEventListener('click', async () => {
+            if (glossaryTerms.length === 0) {
+                alert("Danh sách từ vựng hiện đang trống!");
+                return;
+            }
+
+            const formatBtn = document.getElementById('format-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            
+            formatBtn.disabled = true;
+            cancelBtn.disabled = true;
+
+            // Hiển thị trạng thái định dạng
+            document.getElementById('status-container').style.display = 'block';
+            document.getElementById('status-text').textContent = 'Đang định dạng các biến thể và tạo file Excel...';
+            document.getElementById('status-text').style.display = 'block';
+            document.getElementById('download-section').style.display = 'none';
+
+            try {
+                const response = await fetch('/format', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ terms: glossaryTerms, filename: originalFilename })
+                });
+                
+                if (!response.ok) {
+                    let errData;
+                    try {
+                        errData = await response.json();
+                    } catch (e) {}
+                    throw new Error(errData?.error || `Mã lỗi ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                
+                // Tên file xuất ra
+                const baseName = originalFilename.substring(0, originalFilename.lastIndexOf('.')) || originalFilename;
+                const outFilename = `Glossary_Template_${baseName}.xlsx`;
+
+                // Chuyển sang màn hình download thành công
+                exitEditorMode();
+                document.getElementById('status-container').style.display = 'block';
+                document.getElementById('status-text').style.display = 'none';
+                document.getElementById('download-section').style.display = 'block';
+                
+                const downloadLink = document.getElementById('download-link');
+                downloadLink.href = downloadUrl;
+                downloadLink.download = outFilename;
+                
+                // Kích hoạt tự động download luôn cho người dùng tiện lợi
+                downloadLink.click();
+            } catch (err) {
+                alert("Lỗi định dạng xuất file: " + err.message);
+                formatBtn.disabled = false;
+                cancelBtn.disabled = false;
+                document.getElementById('status-container').style.display = 'none';
+            }
+        });
+
+        function exitEditorMode() {
+            const mainContainer = document.getElementById('main-container');
+            const mainHeader = document.getElementById('main-header');
+            const editorSection = document.getElementById('editor-section');
+
+            mainContainer.classList.remove('expanded');
+            mainHeader.classList.remove('compact');
+            editorSection.style.display = 'none';
+        }
+
+        // Reset flow handlers
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            if (confirm("Bạn có chắc chắn muốn hủy phiên làm việc này?")) {
+                window.location.reload();
+            }
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+import os
+import io
+import tempfile
+from flask import Flask, request, render_template, jsonify, send_file
+from werkzeug.utils import secure_filename
+from core.extractor import extract_terms
+from core.formatter import generate_excel_glossary
+
+app = Flask(__name__)
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Bắt mọi ngoại lệ chưa được xử lý để trả về JSON thay vì trang lỗi HTML mặc định của Flask"""
+    if hasattr(e, 'code') and hasattr(e, 'description'):
+        return jsonify({"error": e.description}), e.code
+    return jsonify({"error": str(e)}), 500
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'docx_file' not in request.files:
+        return jsonify({"error": "Không tìm thấy tệp tin tải lên"}), 400
+
+    docx_file = request.files['docx_file']
+    if docx_file.filename == '':
+        return jsonify({"error": "Không có tệp tin nào được chọn"}), 400
+
+    filename = secure_filename(docx_file.filename)
+    allowed_extensions = {'.docx', '.pdf'}
+    _, ext = os.path.splitext(filename.lower())
+    if ext not in allowed_extensions:
+        return jsonify({"error": "Chỉ chấp nhận tệp tin .docx hoặc .pdf"}), 400
+
+    # Sử dụng tempfile để lưu tệp tạm thời mà không ghi vĩnh viễn vào ổ đĩa (thân thiện với Vercel)
+    fd, temp_path = tempfile.mkstemp(suffix=ext)
+    try:
+        with os.fdopen(fd, 'wb') as tmp:
+            docx_file.save(tmp)
+        
+        # Trích xuất thuật ngữ chuyên ngành trực tiếp (đồng bộ)
+        core_terms = extract_terms(temp_path)
+        
+        return jsonify({
+            "status": "extracted",
+            "message": f"Tìm thấy {len(core_terms)} từ vựng cốt lõi. Hãy review và chỉnh sửa.",
+            "terms": [{"english": term, "vietnamese": ""} for term in core_terms],
+            "filename": filename
+        })
+    finally:
+        # Đảm bảo tệp tạm luôn được dọn dẹp sau khi trích xuất xong
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@app.route('/format', methods=['POST'])
+def format_glossary():
+    data = request.json or {}
+    terms = data.get("terms", [])
+    filename = data.get("filename", "glossary.docx")
+    
+    if not terms:
+        return jsonify({"error": "Danh sách từ vựng trống"}), 400
+        
+    base_name, _ = os.path.splitext(filename)
+    out_filename = f"Glossary_Template_{base_name}.xlsx"
+    
+    try:
+        # Ghi trực tiếp ra bộ nhớ BytesIO (không cần lưu file lên disk)
+        bio = io.BytesIO()
+        generate_excel_glossary(terms, bio)
+        bio.seek(0)
+        
+        return send_file(
+            bio,
+            as_attachment=True,
+            download_name=out_filename,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except Exception as e:
+        return jsonify({"error": f"Lỗi định dạng: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5001)
