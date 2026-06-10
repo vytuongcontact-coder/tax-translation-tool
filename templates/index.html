@@ -447,25 +447,25 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn" id="extract-btn">Bắt đầu Phân tích Văn bản</button>
+            <button type="submit" class="btn" id="extract-btn">Start Document Analysis</button>
         </form>
 
         <!-- Preview Editor Section (Initially Hidden) -->
         <div class="editor-section" id="editor-section" style="display: none;">
             <div class="editor-header">
-                <h2>Bản xem trước & Dịch thuật ngữ</h2>
-                <span class="badge" id="term-count">0 từ</span>
+                <h2>Preview & Term Translation</h2>
+                <span class="badge" id="term-count">0 words</span>
             </div>
 
             <div class="editor-controls">
-                <input type="text" id="search-input" class="search-field" placeholder="Tìm kiếm thuật ngữ tiếng Anh...">
+                <input type="text" id="search-input" class="search-field" placeholder="Search English terms...">
                 <button type="button" class="btn btn-add" id="add-term-btn">
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
                         viewBox="0 0 24 24">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Thêm từ mới
+                    Add new term
                 </button>
             </div>
 
@@ -480,8 +480,8 @@
             </div>
 
             <div class="editor-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-btn">Hủy & Chọn tệp khác</button>
-                <button type="button" class="btn" id="format-btn">Định dạng & Xuất Excel</button>
+                <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel & Choose another file</button>
+                <button type="button" class="btn" id="format-btn">Format & Export Excel</button>
             </div>
         </div>
 
@@ -497,18 +497,18 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h3 style="color: #ec4899; margin: 15px 0 10px 0; font-size: 20px;">Hoàn thành định dạng!</h3>
-                <p style="color: var(--text-muted); margin-bottom: 25px;">Tệp Excel glossary đã sẵn sàng để tải xuống.
+                <h3 style="color: #ec4899; margin: 15px 0 10px 0; font-size: 20px;">Formatting Complete!</h3>
+                <p style="color: var(--text-muted); margin-bottom: 25px;">The Excel glossary file is ready for download.
                 </p>
                 <div style="display: flex; gap: 12px; justify-content: center;">
                     <button type="button" class="btn btn-secondary" style="width: auto; padding: 12px 24px;"
-                        id="restart-btn">Tải tệp mới</button>
+                        id="restart-btn">Upload new file</button>
                     <a href="#" class="download-btn" id="download-link">
                         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                         </svg>
-                        Tải File Excel (.xlsx)
+                        Download Excel File (.xlsx)
                     </a>
                 </div>
             </div>
@@ -539,7 +539,7 @@
             document.getElementById('extract-btn').disabled = true;
             document.getElementById('status-container').style.display = 'block';
             document.getElementById('download-section').style.display = 'none';
-            document.getElementById('status-text').textContent = 'Đang tải tệp tin và phân tích thuật ngữ...';
+            document.getElementById('status-text').textContent = 'Uploading and analyzing document...';
 
             try {
                 const response = await fetch('/upload', { method: 'POST', body: formData });
@@ -547,11 +547,11 @@
                 try {
                     data = await response.json();
                 } catch (jsonErr) {
-                    throw new Error(`Máy chủ trả về mã trạng thái ${response.status}`);
+                    throw new Error(`Server returned status code ${response.status}`);
                 }
 
                 if (!response.ok || data.error) {
-                    alert(data.error || `Lỗi tải lên (Mã lỗi: ${response.status})`);
+                    alert(data.error || `Upload failed (Error code: ${response.status})`);
                     document.getElementById('extract-btn').disabled = false;
                     document.getElementById('status-container').style.display = 'none';
                     return;
@@ -564,7 +564,7 @@
                 glossaryTerms = data.terms || [];
                 enterEditorMode();
             } catch (err) {
-                alert("Lỗi khi tải lên tệp tin: " + err.message);
+                alert("Error uploading file: " + err.message);
                 document.getElementById('extract-btn').disabled = false;
                 document.getElementById('status-container').style.display = 'none';
             }
@@ -587,7 +587,7 @@
 
         function updateTermCount() {
             const badge = document.getElementById('term-count');
-            badge.textContent = `${glossaryTerms.length} từ khóa`;
+            badge.textContent = `${glossaryTerms.length} keywords`;
         }
 
         function renderRows() {
@@ -620,7 +620,7 @@
                 inputVi.type = 'text';
                 inputVi.className = 'input-field term-vi';
                 inputVi.value = term.vietnamese;
-                inputVi.placeholder = 'Nhập nghĩa tiếng Việt...';
+                inputVi.placeholder = 'Enter translation...';
                 inputVi.addEventListener('input', (e) => {
                     glossaryTerms[index].vietnamese = e.target.value;
                 });
@@ -631,7 +631,7 @@
                 colAct.className = 'col-actions';
                 const delBtn = document.createElement('button');
                 delBtn.className = 'delete-row-btn';
-                delBtn.title = 'Xóa từ này';
+                delBtn.title = 'Delete this term';
                 delBtn.innerHTML = `
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -694,7 +694,7 @@
         // Format and Save Function
         document.getElementById('format-btn').addEventListener('click', async () => {
             if (glossaryTerms.length === 0) {
-                alert("Danh sách từ vựng hiện đang trống!");
+                alert("The vocabulary list is currently empty!");
                 return;
             }
 
@@ -706,7 +706,7 @@
 
             // Hiển thị trạng thái định dạng
             document.getElementById('status-container').style.display = 'block';
-            document.getElementById('status-text').textContent = 'Đang định dạng các biến thể và tạo file Excel...';
+            document.getElementById('status-text').textContent = 'Formatting variants and generating Excel file...';
             document.getElementById('status-text').style.display = 'block';
             document.getElementById('download-section').style.display = 'none';
 
@@ -745,7 +745,7 @@
                 // Kích hoạt tự động download luôn cho người dùng tiện lợi
                 downloadLink.click();
             } catch (err) {
-                alert("Lỗi định dạng xuất file: " + err.message);
+                alert("Error formatting and exporting file: " + err.message);
                 formatBtn.disabled = false;
                 cancelBtn.disabled = false;
                 document.getElementById('status-container').style.display = 'none';
@@ -764,7 +764,7 @@
 
         // Reset flow handlers
         document.getElementById('cancel-btn').addEventListener('click', () => {
-            if (confirm("Bạn có chắc chắn muốn hủy phiên làm việc này?")) {
+            if (confirm("Are you sure you want to cancel this session?")) {
                 window.location.reload();
             }
         });
