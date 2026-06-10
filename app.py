@@ -3,7 +3,7 @@ import io
 import tempfile
 from flask import Flask, request, render_template, jsonify, send_file
 from werkzeug.utils import secure_filename
-from core.extractor import extract_terms
+from core.extractor import extract_terms, extract_raw_text
 from core.formatter import generate_excel_glossary
 
 app = Flask(__name__)
@@ -42,11 +42,13 @@ def upload_file():
         
         # Extract keywords directly (synchronous)
         core_terms = extract_terms(temp_path)
+        raw_text = extract_raw_text(temp_path)
         
         return jsonify({
             "status": "extracted",
             "message": f"Found {len(core_terms)} core terms. Please review and edit.",
             "terms": [{"english": term, "vietnamese": ""} for term in core_terms],
+            "raw_text": raw_text,
             "filename": filename
         })
     finally:

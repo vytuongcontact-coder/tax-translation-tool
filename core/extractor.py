@@ -82,5 +82,23 @@ def extract_terms(file_path: str) -> list:
             
     return unique_terms
 
-
-
+def extract_raw_text(file_path: str) -> str:
+    """Extract raw text from PDF or DOCX for the frontend preview pane"""
+    texts = []
+    if file_path.lower().endswith('.pdf'):
+        with fitz.open(file_path) as doc:
+            for page in doc:
+                text = page.get_text()
+                if text.strip():
+                    texts.append(text)
+    else:
+        doc = Document(file_path)
+        for p in doc.paragraphs:
+            if p.text.strip():
+                texts.append(p.text)
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text.strip():
+                        texts.append(cell.text)
+    return "\n\n".join(texts)
