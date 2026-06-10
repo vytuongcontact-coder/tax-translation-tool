@@ -101,4 +101,6 @@ def extract_raw_text(file_path: str) -> str:
                 for cell in row.cells:
                     if cell.text.strip():
                         texts.append(cell.text)
-    return "\n\n".join(texts)
+    full_text = "\n\n".join(texts)
+    # Normalize curly/smart quotes to straight quotes for exact matching in UI
+    return full_text.replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
