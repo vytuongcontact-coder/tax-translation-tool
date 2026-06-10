@@ -1,12 +1,10 @@
-# Technical Documentation: Auto Glossary Extractor (V2)
+# Tài liệu Kỹ thuật: Hệ thống Trích xuất Thuật ngữ Tự động (V2)
 
-This document provides a detailed breakdown of the architecture, technical stack, core algorithms, and general applicability of the **Auto Glossary Extractor** platform.
+Tài liệu này cung cấp bản phân tích chi tiết về kiến trúc hệ thống, các công nghệ sử dụng, thuật toán cốt lõi và khả năng ứng dụng thực tế của nền tảng **Auto Glossary Extractor**.
 
----
+## 1. Kiến trúc Hệ thống
 
-## 1. System Architecture
-
-The application is built on a **stateless, serverless-friendly architecture** designed to run on scalable cloud environments (like Vercel) without depending on a persistent filesystem.
+Ứng dụng được xây dựng trên **kiến trúc phi trạng thái (stateless), thân thiện với môi trường serverless** nhằm vận hành trên các nền tảng đám mây có khả năng mở rộng (như Vercel) mà không cần phụ thuộc vào hệ thống lưu trữ tệp tin vật lý (persistent filesystem).
 
 ```
                     ┌────────────────────────┐
@@ -29,73 +27,73 @@ The application is built on a **stateless, serverless-friendly architecture** de
              └─────────────────────┘└─────────────────┘
 ```
 
-### Key Architectural Pillars:
-* **Stateless Execution**: The backend does not write permanent files to disk. Uploads are processed in-memory or via temporary files (`tempfile`) that are deleted immediately after the request.
-* **In-Memory Formatting**: The Excel output is compiled directly into a memory stream (`io.BytesIO`) and streamed to the user's browser, eliminating file storage needs.
-* **Client-Side State Management**: The browser maintains the active dictionary terms state (`glossaryTerms`), letting the user review, add, edit, or delete items before triggering final export.
+### Các Trụ cột Kiến trúc Chính:
+* **Thực thi Phi trạng thái (Stateless Execution)**: Backend không lưu tệp tin vĩnh viễn trên đĩa cứng. Các tệp tải lên được xử lý trực tiếp trong bộ nhớ hoặc thông qua các tệp tạm thời (`tempfile`) và được xóa ngay lập tức sau khi hoàn thành yêu cầu.
+* **Định dạng trực tiếp trên Bộ nhớ (In-Memory Formatting)**: Tệp đầu ra Excel được biên dịch trực tiếp vào một luồng bộ nhớ (`io.BytesIO`) và truyền thẳng dưới dạng luồng dữ liệu (stream) về trình duyệt của người dùng, loại bỏ nhu cầu lưu trữ tệp trên máy chủ.
+* **Quản lý Trạng thái ở Phía Trình duyệt (Client-Side State Management)**: Trình duyệt lưu giữ trạng thái hoạt động của danh sách thuật ngữ (`glossaryTerms`), cho phép người dùng kiểm tra, thêm mới, sửa đổi hoặc xóa các mục trước khi kích hoạt xuất bản tệp tin cuối cùng.
 
 ---
 
-## 2. Core Technical Components
+## 2. Các Thành phần Kỹ thuật Cốt lõi
 
-### A. Document Parsing & Text Extraction (`core/extractor.py`)
-The system parses two main formats (.DOCX and .PDF) and merges them into a normalized string for matching:
-* **Word Documents (`.docx`)**: Utilizes `python-docx` to read all paragraphs and table cells, normalizing mid-word line breaks (e.g. converting `Arm's \n Length` into `Arm's Length`).
-* **PDF Documents (`.pdf`)**: Utilizes PyMuPDF (`fitz`) to extract text layout-by-layout, handling cross-page word wraps.
+### A. Phân tích Tài liệu & Trích xuất Văn bản (`core/extractor.py`)
+Hệ thống phân tích hai định dạng tài liệu chính (.DOCX và .PDF) và hợp nhất chúng thành một chuỗi văn bản chuẩn hóa để phục vụ so khớp:
+* **Tài liệu Word (`.docx`)**: Sử dụng thư viện `python-docx` để đọc tất cả các đoạn văn và ô trong bảng biểu, chuẩn hóa lỗi ngắt dòng ở giữa các từ (ví dụ: chuyển đổi `Arm's \n Length` thành `Arm's Length`).
+* **Tài liệu PDF (`.pdf`)**: Sử dụng PyMuPDF (`fitz`) để trích xuất văn bản theo từng khối bố cục (layout-by-layout), xử lý các từ bị ngắt dòng giữa các trang.
 
-### B. High-Speed Greedy Regex Keyword Matching (`core/extractor.py`)
-This is the core algorithm of the glossary scanner:
-1. **Dictionary Compiling**: Loads `core/tax_dictionary.json` (a curated tax dictionary of hundreds of terms).
-2. **Greedy Sort**: Sorts all terms by length in descending order. This ensures that compound terms are evaluated before individual words. For example, `"transfer pricing policy"` is matched first, avoiding matching it as `"transfer pricing"` + `"policy"`.
-3. **Single-Pass Regular Expression**: Escapes special characters and joins all terms with the logical OR `|` operator, enclosed by word boundaries (`\b`):
+### B. Thuật toán So khớp Từ khóa Tham lam Regex Tốc độ cao (`core/extractor.py`)
+Đây là thuật toán cốt lõi của công cụ quét thuật ngữ:
+1. **Biên dịch Từ điển (Dictionary Compiling)**: Tải tệp `core/tax_dictionary.json` (từ điển thuế chọn lọc chứa hàng trăm cặp thuật ngữ).
+2. **Sắp xếp Tham lam (Greedy Sort)**: Sắp xếp tất cả các thuật ngữ theo độ dài giảm dần. Điều này đảm bảo các cụm từ ghép được đánh giá trước các từ đơn lẻ. Ví dụ: cụm từ `"transfer pricing policy"` được khớp trước để tránh việc khớp sai lệch thành các từ riêng lẻ là `"transfer pricing"` và `"policy"`.
+3. **Biểu thức Chính quy Single-Pass (Single-Pass Regex)**: Escape các ký tự đặc biệt và nối tất cả các thuật ngữ bằng toán tử logic HOẶC `|`, bao bọc bởi ranh giới từ (`\b`):
    $$\text{Pattern} = \backslash\text{b}(\text{term}_1|\text{term}_2|\text{term}_3|\dots)\backslash\text{b}$$
-   This pattern is compiled with `re.IGNORECASE` for high-speed scanning of the document body.
-4. **Case-Insensitive Deduplication**: Matches are returned preserving their original casing in the document, and then deduplicated case-insensitively.
+   Mẫu Regex này được biên dịch với cờ `re.IGNORECASE` để quét toàn bộ nội dung tài liệu với tốc độ cao.
+4. **Loại bỏ Trùng lặp Không Phân biệt Hoa Thường**: Các kết quả khớp được trả về với định dạng chữ hoa/thường nguyên bản trong tài liệu, sau đó được loại bỏ trùng lặp một cách không phân biệt hoa thường.
 
-### C. Case Variant Generation & Expansion (`core/formatter.py`)
-To maximize the usefulness of the glossary in computer-assisted translation (CAT) tools (such as SDL Trados, memoQ, or Phrase), the export engine expands each term into 5 casing variants and 1 acronym variant:
-* **Lowercase**: `transfer pricing`
-* **Uppercase**: `TRANSFER PRICING`
-* **Capitalized**: `Transfer pricing`
-* **Title Case**: `Transfer Pricing`
-* **Apostrophe Title Correction**: `Arm's Length` (fixing Python's default `.title()` behavior which produces `Arm'S`)
-* **Acronym**: Generates abbreviation variations (e.g. `TRANSFER PRICING GLOBAL MASTER FILE` $\rightarrow$ `TPGMF`) for terms with $\ge 2$ words.
+### C. Tạo & Mở rộng Biến thể Chữ Hoa/Thường (`core/formatter.py`)
+Để tối đa hóa hiệu quả sử dụng của bảng thuật ngữ trong các công cụ dịch thuật hỗ trợ máy tính (CAT Tools như SDL Trados, memoQ hoặc Phrase), bộ máy xuất bản sẽ tự động mở rộng mỗi thuật ngữ thành 5 biến thể chữ hoa/thường và 1 biến thể viết tắt:
+* **Chữ thường (Lowercase)**: `transfer pricing`
+* **Chữ hoa (Uppercase)**: `TRANSFER PRICING`
+* **Viết hoa đầu câu (Capitalized)**: `Transfer pricing`
+* **Viết hoa mỗi từ (Title Case)**: `Transfer Pricing`
+* **Sửa lỗi viết hoa có dấu nháy đơn**: `Arm's Length` (sửa hành vi mặc định của `.title()` trong Python vốn tạo ra lỗi `Arm'S`)
+* **Từ viết tắt (Acronym)**: Tạo ra các biến thể từ viết tắt (ví dụ: `TRANSFER PRICING GLOBAL MASTER FILE` $\rightarrow$ `TPGMF`) đối với các cụm từ có $\ge 2$ từ.
 
-### D. Bi-directional Sync Scrolling & Live Previews (`templates/index.html`)
-The frontend contains high-fidelity javascript linkages to sync the document preview and terms list:
-* **Quotes Normalization**: To prevent quote mismatching (curly quotes `’` in the PDF vs straight quotes `'` in the dictionary), the text is normalized to straight quotes (`'`) on both sides.
-* **Preview ➔ Editor Link**: Clicking a highlighted term in the preview panel searches the browser's glossary array, identifies the index, scrolls the editor row into view, and flashes the border.
-* **Editor ➔ Preview Link**: Clicking the search icon next to an editor input triggers a DOM query inside the preview, scrolls the first matched occurrence into center, and highlights it.
+### D. Đồng bộ hóa Cuộn Màn hình 2 chiều & Preview Trực tiếp (`templates/index.html`)
+Màn hình frontend chứa các mã JavaScript hiệu năng cao để đồng bộ hóa danh sách thuật ngữ và giao diện preview văn bản:
+* **Chuẩn hóa Dấu nháy (Quotes Normalization)**: Để ngăn chặn việc không khớp dấu nháy (dấu nháy cong `’` trong file PDF gốc so với dấu nháy thẳng `'` trong từ điển), toàn bộ văn bản được chuẩn hóa về dấu nháy thẳng (`'`) ở cả hai phía.
+* **Liên kết Preview ➔ Editor**: Nhấp vào một thuật ngữ được highlight trong bảng xem trước sẽ thực hiện tìm kiếm trong mảng dữ liệu của trình duyệt, xác định chỉ mục (index), tự động cuộn dòng tương ứng trong bảng Editor vào giữa màn hình và nhấp nháy viền thẻ.
+* **Liên kết Editor ➔ Preview**: Nhấp vào biểu tượng kính lúp bên cạnh ô nhập liệu của Editor sẽ kích hoạt một câu lệnh truy vấn DOM trong bảng xem trước, cuộn vị trí xuất hiện đầu tiên của thuật ngữ đó vào giữa màn hình và highlight nó bằng màu vàng.
 
 ---
 
-## 3. Technology Stack
+## 3. Công nghệ Sử dụng (Technology Stack)
 
-| Layer | Technology | Purpose |
+| Lớp | Công nghệ | Mục đích |
 | :--- | :--- | :--- |
-| **Backend Framework** | `Flask (Python 3.9+)` | Minimal, high-speed serverless routing |
-| **Document Reader** | `PyMuPDF (fitz)` & `python-docx` | Layout-level text extraction from PDF and Word documents |
-| **Data & Spreadsheet** | `Pandas` & `openpyxl` | Excel generation, case variant mapping, and sorting |
-| **Frontend Structure** | `HTML5` & `JavaScript (ES6)` | Direct DOM manipulation, stateless JSON parsing, and layout syncing |
-| **Styling & Theme** | `CSS3 (Vanilla)` | Responsive media queries, KPMG branding colors, and glassmorphic inputs |
-| **Cloud Hosting** | `Vercel` | Serverless Python function runtime |
+| **Backend Framework** | `Flask (Python 3.9+)` | Định tuyến serverless tinh gọn, tốc độ cao |
+| **Trình đọc Tài liệu** | `PyMuPDF (fitz)` & `python-docx` | Trích xuất văn bản cấp độ bố cục từ tệp PDF và Word |
+| **Dữ liệu & Bảng tính** | `Pandas` & `openpyxl` | Tạo tệp Excel, ánh xạ biến thể chữ hoa/thường và sắp xếp |
+| **Cấu trúc Frontend** | `HTML5` & `JavaScript (ES6)` | Thao tác DOM trực tiếp, phân tích cú pháp JSON phi trạng thái và đồng bộ hóa bố cục |
+| **Giao diện & Theme** | `CSS3 (Vanilla)` | Truy vấn đáp ứng (Media queries), màu sắc thương hiệu KPMG và các ô nhập liệu tối giản |
+| **Cloud Hosting** | `Vercel` | Môi trường thực thi serverless của Python |
 
 ---
 
-## 4. General Applicability (Generalization)
+## 4. Khả năng Áp dụng Rộng rãi (Generalization)
 
-Although this application is customized with a **tax dictionary** (`core/tax_dictionary.json`) and **KPMG Visual Identity**, the core engineering is generic and can be applied to any industry glossary extraction pipeline:
+Mặc dù ứng dụng này được tùy chỉnh kèm theo **từ điển thuế** (`core/tax_dictionary.json`) và Nhận diện Thương hiệu của KPMG, phần lõi kỹ thuật hoàn toàn mang tính tổng quát và có thể áp dụng cho bất kỳ hệ thống trích xuất thuật ngữ chuyên ngành nào:
 
-### 1. Dictionary Swap (Any Domain)
-By replacing the `core/tax_dictionary.json` file, the tool can instantly scan for:
-* **Medical / Pharmaceutical**: Scan clinical trials for drug names, side effects, and symptoms.
-* **Legal / Contracts**: Scan legal agreements for contract clauses, corporate names, and compliance terms.
-* **Engineering**: Scan construction specifications for materials, standards, and equipment codes.
+### 1. Thay đổi Từ điển (Mọi Lĩnh vực)
+Bằng cách thay thế tệp `core/tax_dictionary.json`, công cụ này có thể quét ngay lập tức các thuật ngữ thuộc:
+* **Y học / Dược phẩm**: Quét các tài liệu thử nghiệm lâm sàng để tìm tên thuốc, tác dụng phụ và triệu chứng.
+* **Pháp lý / Hợp đồng**: Quét các thỏa thuận pháp lý để tìm các điều khoản hợp đồng, tên pháp nhân và các thuật ngữ tuân thủ.
+* **Kỹ thuật / Xây dựng**: Quét các hồ sơ đặc tính kỹ thuật xây dựng để tìm vật liệu, tiêu chuẩn và mã thiết bị.
 
-### 2. Multi-Language Support
-While the default UI and excel columns use `Source` (English) and `Target` (Vietnamese), the translation input boxes can accept any Unicode characters (Chinese, Japanese, Arabic, Russian, etc.) and write them successfully to standard UTF-8 Excel formats.
+### 2. Hỗ trợ Đa Ngôn ngữ
+Mặc dù giao diện mặc định và các cột Excel sử dụng ngôn ngữ hiển thị là `Source` (tiếng Anh) và `Target` (tiếng Việt), các ô nhập bản dịch có thể tiếp nhận bất kỳ ký tự Unicode nào (tiếng Trung, tiếng Nhật, tiếng Hàn, tiếng Nga, tiếng Ả Rập...) và lưu thành công vào định dạng bảng tính Excel UTF-8 tiêu chuẩn.
 
-### 3. CAT Tool Integration
-The generated spreadsheet format (containing parallel columns of expanded case variants) is designed to be directly imported into translation databases:
-* Can be converted to `.tbx` (TermBase eXchange) format.
-* Can be imported directly into Trados MultiTerm or memoQ Termbase, saving translators hours of manual copy-pasting.
+### 3. Tích hợp với các Công cụ CAT Tool
+Định dạng bảng tính được tạo ra (chứa các cột song song của các biến thể chữ hoa/thường đã được mở rộng) được thiết kế để nhập trực tiếp vào cơ sở dữ liệu dịch thuật:
+* Có thể chuyển đổi sang định dạng `.tbx` (TermBase eXchange).
+* Có thể nhập trực tiếp vào hệ thống Trados MultiTerm hoặc memoQ Termbase, giúp biên dịch viên tiết kiệm hàng giờ sao chép thủ công.
