@@ -1658,11 +1658,15 @@
         }
 
         function countOccurrences(word) {
+            console.log("[DEBUG] countOccurrences called with:", JSON.stringify(word));
+            console.log("[DEBUG] documentText exists:", !!documentText, "length:", documentText ? documentText.length : 0);
             if (!word || !documentText) return 0;
             const escaped = escapeRegExp(word.trim());
             const regex = new RegExp('\\b' + escaped + '\\b', 'gi');
             const matches = documentText.match(regex);
-            return matches ? matches.length : 0;
+            const count = matches ? matches.length : 0;
+            console.log("[DEBUG] regex:", regex.toString(), "matches found:", count);
+            return count;
         }
 
         function updateCounts() {
@@ -1699,15 +1703,22 @@
                 inputEn.className = 'input-field term-en';
                 inputEn.value = term.english;
                 inputEn.placeholder = 'Source term...';
-                inputEn.addEventListener('input', (e) => {
-                    glossaryTerms[index].english = e.target.value;
-                    renderDocument(document.getElementById('doc-search').value);
-                    updateCounts();
-                });
 
                 const badgeSpan = document.createElement('span');
                 badgeSpan.className = 'occurrences-badge';
                 badgeSpan.innerHTML = occurrences > 0 ? `Found ${occurrences} times` : `<span style="color: var(--danger-color)">Not found in text</span>`;
+
+                inputEn.addEventListener('input', (e) => {
+                    const newVal = e.target.value;
+                    glossaryTerms[index].english = newVal;
+                    
+                    // Dynamically update occurrence badge
+                    const newOccurrences = countOccurrences(newVal);
+                    badgeSpan.innerHTML = newOccurrences > 0 ? `Found ${newOccurrences} times` : `<span style="color: var(--danger-color)">Not found in text</span>`;
+                    
+                    renderDocument(document.getElementById('doc-search').value);
+                    updateCounts();
+                });
 
                 colEn.appendChild(inputEn);
                 colEn.appendChild(badgeSpan);

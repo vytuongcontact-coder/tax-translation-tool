@@ -19,6 +19,14 @@ def handle_exception(e):
 def index():
     return render_template('index.html')
 
+@app.after_request
+def add_header(response):
+    """Disable caching for all responses to avoid template and JS caching in browsers"""
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'docx_file' not in request.files:
