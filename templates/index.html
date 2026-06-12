@@ -949,6 +949,70 @@
             text-overflow: ellipsis;
         }
 
+        /* Export Preview Table styles */
+        .export-preview-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            max-height: 220px;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .export-preview-header {
+            background: #f8fafc;
+            padding: 10px 14px;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-main);
+        }
+
+        .export-preview-body {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .export-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .export-preview-table th {
+            background: #f8fafc;
+            padding: 6px 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            text-align: left;
+        }
+
+        .export-preview-table td {
+            padding: 6px 12px;
+            color: var(--text-main);
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .export-preview-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .success-buttons {
             display: flex;
             gap: 12px;
@@ -1308,6 +1372,27 @@
                 <div class="summary-row">
                     <span class="summary-lbl">Export Format:</span>
                     <span class="summary-val">Excel Spreadsheet (.xlsx)</span>
+                </div>
+            </div>
+
+            <!-- Export Preview Table -->
+            <div class="export-preview-container">
+                <div class="export-preview-header">
+                    <span>Export Preview (Generated Variations)</span>
+                    <span class="badge" id="preview-row-count" style="font-size: 11px; background: var(--primary-glow); color: var(--primary-solid); padding: 1px 6px; border-radius: 10px; font-weight: 500;">0 rows</span>
+                </div>
+                <div class="export-preview-body">
+                    <table class="export-preview-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">SOURCE (EN)</th>
+                                <th style="width: 50%;">TARGET (VI)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-table-body">
+                            <!-- Dynamically generated rows -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -1832,6 +1917,52 @@
             if (firstInput) firstInput.focus();
         });
 
+        // Helper to generate preview rows matching backend core/formatter.py logic
+        function generatePreviewRows(terms) {
+            const rows = [];
+            terms.forEach(item => {
+                const term = (item.english || "").trim();
+                const trans = (item.vietnamese || "").trim();
+                if (!term) return;
+
+                const mapping = {};
+
+                // Helper to capitalize first letter only
+                const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+                
+                // Helper to capitalize each word (corrected Title case)
+                const titleCase = (str) => str ? str.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "";
+
+                // 1. lowercase
+                mapping[term.toLowerCase()] = trans ? trans.toLowerCase() : "";
+
+                // 2. uppercase
+                mapping[term.toUpperCase()] = trans ? trans.toUpperCase() : "";
+
+                // 3. capitalize
+                mapping[capitalize(term)] = trans ? capitalize(trans) : "";
+
+                // 4. Title case
+                mapping[titleCase(term)] = trans ? titleCase(trans) : "";
+
+                // 5. acronym (if length >= 2 words)
+                const words = term.split(/\s+/);
+                if (words.length >= 2) {
+                    const acronym = words.map(w => w.charAt(0).toUpperCase()).join("");
+                    mapping[acronym] = trans;
+                }
+
+                // Add to rows
+                for (const [enVar, viVar] of Object.entries(mapping)) {
+                    rows.push({ source: enVar, target: viVar });
+                }
+            });
+
+            // Sort by source (case-insensitive)
+            rows.sort((a, b) => a.source.toLowerCase().localeCompare(b.source.toLowerCase()));
+            return rows;
+        }
+
         // Format & Submit to backend
         document.getElementById('format-btn').addEventListener('click', async () => {
             if (glossaryTerms.length === 0) {
@@ -1908,14 +2039,26 @@
                     document.getElementById('summary-doc-name').textContent = originalFilename;
                     document.getElementById('summary-terms-count').textContent = `${glossaryTerms.length} core keywords`;
                     
+                    // Generate and render preview rows
+                    const previewRows = generatePreviewRows(glossaryTerms);
+                    document.getElementById('preview-row-count').textContent = `${previewRows.length} rows`;
+                    
+                    const pBody = document.getElementById('preview-table-body');
+                    pBody.innerHTML = '';
+                    previewRows.forEach(r => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td title="${escapeHTML(r.source)}">${escapeHTML(r.source)}</td>
+                            <td title="${escapeHTML(r.target)}">${escapeHTML(r.target)}</td>
+                        `;
+                        pBody.appendChild(tr);
+                    });
+
                     const downloadBtn = document.getElementById('download-link');
                     downloadBtn.href = downloadUrl;
                     downloadBtn.download = outFilename;
 
                     document.getElementById('success-overlay').style.display = 'flex';
-                    
-                    // Trigger download
-                    downloadBtn.click();
                 }, 400);
 
             } catch (err) {
